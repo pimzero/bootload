@@ -1,5 +1,4 @@
 TARGET = boot
-TARGET_IMG = boot.img
 COMMON= -static -m32
 ASFLAGS = $(COMMON) -ffreestanding -fno-asynchronous-unwind-tables
 CFLAGS = $(ASFLAGS) -Os -fno-stack-protector
@@ -9,9 +8,9 @@ OBJS = boot.o data.o entry.o bios.o
 
 SOURCE_ISO ?= source.iso
 
-$(TARGET_IMG):
+all: $(TARGET).iso
 
-boot: $(OBJS)
+$(TARGET): $(OBJS)
 
 %.bin: %
 	objcopy -O binary $^ $@
@@ -28,7 +27,7 @@ run-iso: $(TARGET).iso
 	qemu-system-i386 -fda $^ $(QEMU_FLAGS)
 	#qemu-system-i386 -cdrom $^ $(QEMU_FLAGS)
 
-run-img: $(TARGET_IMG)
+run-img: $(TARGET).img
 	qemu-system-i386 -fda $^ $(QEMU_FLAGS)
 
 run-iso-kvm: QEMU_FLAGS = -enable-kvm
@@ -40,4 +39,4 @@ run-img-kvm: run-img
 clean:
 	$(RM) boot.bin boot.img boot.iso boot $(OBJS)
 
-.PHONY: run-iso run-iso-kvm run-img run-img-kvm clean
+.PHONY: all run-iso run-iso-kvm run-img run-img-kvm clean
