@@ -14,6 +14,7 @@ struct {
 
 void* sp;
 
+#if 0
 #define PUSHALL(esc) \
 	"push " #esc "eax\n\t" \
 	"push " #esc "ebx\n\t" \
@@ -30,7 +31,11 @@ void* sp;
 	"pop " #esc "edx\n\t" \
 	"pop " #esc "ecx\n\t" \
 	"pop " #esc "ebx\n\t" \
-	"pop " #esc "eax\n\t" \
+	"pop " #esc "eax\n\t"
+#else
+#define PUSHALL(esc) ""
+#define POPALL(esc) ""
+#endif
 
 #define SAVE_STACK(esc) \
 	PUSHALL(esc)
