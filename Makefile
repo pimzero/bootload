@@ -5,7 +5,7 @@ ASFLAGS = $(COMMON) -ffreestanding -ggdb
 CFLAGS = $(ASFLAGS) -Os -fno-stack-protector
 LDFLAGS = $(COMMON) -nostdlib -Tlinker.ld -n -Wl,--build-id=none -nostartfiles
 
-OBJS = boot.o data.o entry.o
+OBJS = boot.o data.o entry.o bios.o
 
 $(TARGET_IMG):
 
