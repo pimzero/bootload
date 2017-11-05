@@ -35,6 +35,7 @@ pop %ax
 pop %bx
 pop %cx
 pop %dx
+sub $8, %esp
 xchg %ebp, %esp
 
 // self modifying int
