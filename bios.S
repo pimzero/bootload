@@ -37,12 +37,23 @@ inc %dx
 mov (%eax, %edx, 2), %cx
 inc %dx
 mov (%eax, %edx, 2), %dx
+push %ebp
+push %eax
 mov (%eax), %ax
 
 // self modifying int
 .byte 0xcd
 interrupt_nr:
 .byte 0x0
+
+pop %ebp
+mov %ax, (%ebp)
+mov %bx, 2(%ebp)
+mov %cx, 4(%ebp)
+inc %ebp
+inc %ebp
+mov %dx, 4(%ebp)
+pop %ebp
 
 nop
 nop
