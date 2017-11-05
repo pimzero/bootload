@@ -46,7 +46,6 @@ void* sp;
 
 #define X86_RM(reg, esc) \
 	\
-	"cli\n\t" \
 	"lidt idtr\n\t" \
 	\
 	"mov $0x20, " #esc #reg "\n\t" \
@@ -59,6 +58,8 @@ void* sp;
 	"ljmp $0x18, $1f\n" \
 	"1:\n" \
 	".code16\n\t" \
+	\
+	"sti\n\t" \
 	\
 	"mov " #esc "cr0, " #esc "e" #reg "\n\t" \
 	"dec " #esc "e" #reg "\n\t" \
@@ -78,6 +79,7 @@ void* sp;
 	//"mov " #esc "ebp, " #esc "esp \n\t"
 
 #define X86_PM(reg, esc) \
+	"cli\n\t" \
 	"lgdt gdtr\n\t" \
 	"smsw " #esc #reg "\n\t" \
 	"or $1, " #esc #reg "\n\t" \
@@ -97,21 +99,33 @@ void* sp;
 
 void bios_int(uint8_t nr, struct regs* regs)
 {
+#if 0
+	uint16_t a = regs->a;
+	uint16_t b = regs->b;
+	uint16_t c = regs->c;
+	uint16_t d = regs->d;
+#endif
 	asm volatile (
 	     SAVE_STACK(%%)
 	    "mov %%bx, interrupt_nr\n\t"
-	    X86_RM(bx, %%) : : "b"(nr));
+	     : : "b"(nr));
 
 	asm volatile (
+	    X86_RM(di, %%)
 	    // self modifying int
 	    ".byte 0xcd\n"
 	    "interrupt_nr:\n"
 	    ".byte 0x0\n\t"
-	     : : "a"(regs->a), "b"(regs->b), "c"(regs->c), "d"(regs->d));
-
+	     : "=&a"(regs->a), "+b"(regs->b), "+c"(regs->c), "+d"(regs->d));
 	asm volatile(
 	    "xor %ebx, %ebx\n\t"
 	    X86_PM(bx,%)
 	    RESTORE_STACK(%));
+
+#if 0
+	regs->a = a;
+	regs->b = b;
+	regs->c = c;
+#endif
 //mov $0x43, %al  #   ; AL = code of character to display
 }
