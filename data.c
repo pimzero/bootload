@@ -66,11 +66,3 @@ struct gdtr gdtr = {
 	.base = gdt,
 	.limit = sizeof(gdt) - 1,
 };
-
-struct {
-	uint16_t limit;
-	void* base;
-} __packed idtr = {
-	.limit = 0x3FF,
-	.base = NULL,
-};

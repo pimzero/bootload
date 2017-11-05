@@ -9,8 +9,6 @@ pop %eax
 mov %bl, interrupt_nr
 push %ecx
 
-lidt idtr
-
 mov $0x20, %bx
 call bx_to_segm
 
