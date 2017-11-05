@@ -9,8 +9,8 @@ pop %eax
 mov %bl, interrupt_nr
 push %ecx
 
-mov $0x20, %bx
-call bx_to_segm
+mov $0x20, %bl
+call bl_to_segm
 
 ljmp $0x18, $1f
 1:
@@ -25,26 +25,23 @@ mov %ebx, %cr0
 ljmp $0x0, $1f
 1:
 
-mov $0x0, %bx
-call bx_to_segm
+xor %bx, %bx
+call bl_to_segm
 
-xor %dx, %dx
-inc %dx
-mov (%eax, %edx, 2), %bx
-inc %dx
-mov (%eax, %edx, 2), %cx
-inc %dx
-mov (%eax, %edx, 2), %dx
 push %ebp
-push %eax
-mov (%eax), %ax
+mov %esp, %ebp
+mov %eax, %esp
+pop %ax
+pop %bx
+pop %cx
+pop %dx
+xchg %ebp, %esp
 
 // self modifying int
 .byte 0xcd
 interrupt_nr:
 .byte 0x0
 
-pop %ebp
 mov %ax, (%ebp)
 mov %bx, 2(%ebp)
 mov %cx, 4(%ebp)
@@ -53,24 +50,17 @@ inc %ebp
 mov %dx, 4(%ebp)
 pop %ebp
 
-nop
-nop
-
-lgdt gdtr
-smsw %bx
-or $1, %bx
-lmsw %bx
-
-ljmp $0x8, $1f
-1:
+call go_pm
 .code32
 
 cli
 
-mov $0x10, %bx
+mov $0x10, %bl
 
-.global bx_to_segm
-bx_to_segm:
+.global bl_to_segm
+bl_to_segm:
+
+xor %bh, %bh
 
 mov %bx, %ds
 mov %bx, %es
@@ -79,3 +69,18 @@ mov %bx, %gs
 mov %bx, %ss
 
 ret
+
+.code16
+.global go_pm
+go_pm:
+
+lgdt gdtr
+smsw %bx
+or $1, %bx
+lmsw %bx
+
+.code32
+popl %eax
+pushl $0x8
+pushl %eax
+lret

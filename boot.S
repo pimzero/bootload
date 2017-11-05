@@ -2,25 +2,21 @@
 .code16
 .global __entry
 .global bx_to_segm
-cli
+.global go_pm
 
-lgdt gdtr
+cli
 
 #jmp 1f
 #1:
 
 # PM mode
-smsw %dx
-or $1, %dx
-lmsw %dx
 
-ljmp $0x8, $1f
-1:
+call go_pm
 
 .code32
 
-mov $0x10, %bx
+mov $0x10, %bl
 
-call bx_to_segm
+call bl_to_segm
 
 call __entry
