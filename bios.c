@@ -95,18 +95,23 @@ void* sp;
 	"mov " #esc #reg ", " #esc "ss\n\t"
 
 
-void bios_int(char nr, short c)
+void bios_int(uint8_t nr, struct regs* regs)
 {
-	asm(SAVE_STACK(%%)
-	    "mov %%bl, interrupt_nr\n\t"
-	    X86_RM(bx, %%)
-	    "mov $0x0e, %%ah\n"
+	asm volatile (
+	     SAVE_STACK(%%)
+	    "mov %%bx, interrupt_nr\n\t"
+	    X86_RM(bx, %%) : : "b"(nr));
+
+	asm volatile (
 	    // self modifying int
 	    ".byte 0xcd\n"
 	    "interrupt_nr:\n"
 	    ".byte 0x0\n\t"
-	    X86_PM(bx, %%)
-	    RESTORE_STACK(%%)
-	     : : "a"(c), "b"(nr));
+	     : : "a"(regs->a), "b"(regs->b), "c"(regs->c), "d"(regs->d));
+
+	asm volatile(
+	    "xor %ebx, %ebx\n\t"
+	    X86_PM(bx,%)
+	    RESTORE_STACK(%));
 //mov $0x43, %al  #   ; AL = code of character to display
 }
