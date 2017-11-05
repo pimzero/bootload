@@ -1,5 +1,5 @@
 TARGET = boot
-COMMON= -static -m32
+COMMON= -static -m32 -ggdb
 ASFLAGS = $(COMMON) -ffreestanding -fno-asynchronous-unwind-tables
 CFLAGS = $(ASFLAGS) -Os -fno-stack-protector
 LDFLAGS = $(COMMON) -nostdlib -Tlinker.ld -n -Wl,--build-id=none -nostartfiles
@@ -36,7 +36,13 @@ run-iso-kvm: run-iso
 run-img-kvm: QEMU_FLAGS = -enable-kvm
 run-img-kvm: run-img
 
+run-iso-dbg: QEMU_FLAGS = -s -S
+run-iso-dbg: run-iso
+
+run-img-dbg: QEMU_FLAGS = -s -S
+run-img-dbg: run-img
+
 clean:
 	$(RM) boot.bin boot.img boot.iso boot $(OBJS)
 
-.PHONY: all run-iso run-iso-kvm run-img run-img-kvm clean
+.PHONY: all run-iso run-iso-kvm  run-iso-dbg run-img run-img-kvm run-img-dbg clean
