@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include <stdint.h>
 
 #include "data.h"
@@ -66,3 +67,10 @@ struct gdtr gdtr = {
 	.limit = sizeof(gdt) - 1,
 };
 
+struct {
+	uint16_t limit;
+	void* base;
+} __packed idtr = {
+	.limit = 0x3FF,
+	.base = NULL,
+};
