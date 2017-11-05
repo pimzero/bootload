@@ -1,6 +1,7 @@
 .text
 .code16
 .global __entry
+.global bx_to_segm
 cli
 
 lgdt gdtr
@@ -18,11 +19,8 @@ ljmp $0x8, $1f
 
 .code32
 
-mov $0x10, %ax
-mov %ax, %ds
-mov %ax, %es
-mov %ax, %fs
-mov %ax, %gs
-mov %ax, %ss
+mov $0x10, %bx
+
+call bx_to_segm
 
 call __entry
