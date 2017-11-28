@@ -1,13 +1,18 @@
 .global idtr
 
+/*
+ * eax, ebx, ecx, edx = int args
+ * ebp = int number (dropped)
+ */
+
 .global bios_int
 bios_int:
 
-pop %ecx
-pop %ebx
-pop %eax
+xchg %ebp, %ebx
+
 mov %bl, interrupt_nr
-push %ecx
+
+push %ebp
 
 mov $0x20, %bl
 call bl_to_segm
@@ -28,28 +33,12 @@ ljmp $0x0, $1f
 xor %bx, %bx
 call bl_to_segm
 
-push %ebp
-mov %esp, %ebp
-mov %eax, %esp
-pop %ax
-pop %bx
-pop %cx
-pop %dx
-sub $8, %esp
-xchg %ebp, %esp
+pop %ebx
 
 // self modifying int
 .byte 0xcd
 interrupt_nr:
 .byte 0x0
-
-mov %ax, (%ebp)
-mov %bx, 2(%ebp)
-mov %cx, 4(%ebp)
-inc %ebp
-inc %ebp
-mov %dx, 4(%ebp)
-pop %ebp
 
 call go_pm
 .code32
@@ -61,6 +50,8 @@ mov $0x10, %bl
 .global bl_to_segm
 bl_to_segm:
 
+push %bx
+
 xor %bh, %bh
 
 mov %bx, %ds
@@ -69,19 +60,22 @@ mov %bx, %fs
 mov %bx, %gs
 mov %bx, %ss
 
+pop %bx
+
 ret
 
 .code16
 .global go_pm
+/* Drop bp */
 go_pm:
 
 lgdt gdtr
-smsw %bx
-or $1, %bx
-lmsw %bx
+smsw %bp
+or $1, %bp
+lmsw %bp
 
 .code32
-popl %eax
+popl %ebp
 pushl $0x8
-pushl %eax
+pushl %ebp
 lret
