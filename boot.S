@@ -19,4 +19,6 @@ mov $0x10, %bl
 
 call bl_to_segm
 
+push %edx
+
 call __entry
