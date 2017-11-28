@@ -36,7 +36,10 @@ call bios_int
 
 lea 8(%esp), %edx
 
+
 /* Elf Loading */
+driver_elf_begin:
+
 /* EDX == begining of file */
 cmpl $0x464C457f /* 0x7F"ELF" */, (%edx)
 jne fail
@@ -48,6 +51,8 @@ add (ELF_e_phoff)(%edx), %ebx
 //mov (%ebx, %eax, 1), %ecx
 //test %ecx, PT_LOAD
 
+// Need at least 1 segment (underflow if 0 segment)
+// TODO: Check if 0 segments
 load_segment:
 
 dec %ecx
@@ -64,26 +69,27 @@ push %ecx
 mov (ELF_p_offset)(%ebx, %ecx), %esi
 add %edx, %esi
 mov (ELF_p_vaddr)(%ebx, %ecx), %edi
+mov (ELF_p_memsz)(%ebx, %ecx), %eax
 mov (ELF_p_filesz)(%ebx, %ecx), %ecx
+// TODO: if %ecx > %eax -> %ecx = %eax
+sub %ecx, %eax
 
 rep movsb
 
+xchg %ecx, %eax
+rep stosb
+
 pop %ecx
 
-mov $0x0e43, %ax
-mov $0x10, %ebp
-call bios_int
-
-noload:
+noload: // Don't do anything
 
 shr $5, %ecx
-
 inc %ecx
-
 loop load_segment
 
 mov (ELF_e_entry)(%edx), %eax
 
+driver_elf_end:
 /* Elf loading end */
 
 add $0x808, %esp
