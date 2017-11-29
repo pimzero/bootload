@@ -1,4 +1,4 @@
-TARGET = boot
+TARGET = boot-floppy
 KERNEL = /k
 SOURCE_FS ?= ./source
 
@@ -10,7 +10,7 @@ LDFLAGS = $(COMMON) -nostdlib -Tlinker.ld -n -Wl,--build-id=none -nostartfiles
 
 OBJS = boot.o data.o entry.o bios.o elf_loader.o
 
-all: $(TARGET).iso
+all: $(TARGET)-emu.iso
 
 $(TARGET): $(TARGET).o $(OBJS)
 
