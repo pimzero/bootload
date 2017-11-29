@@ -19,6 +19,8 @@
 #define ELF_p_flags (ELF_p_memsz + 4)
 #define ELF_p_align (ELF_p_flags + 4)
 
+#define ELF_sizeof_Phdr 32
+
 #define PT_LOAD 1
 
 .global __entry
@@ -55,22 +57,20 @@ add (ELF_e_phoff)(%edx), %ebx
 // TODO: Check if 0 segments
 load_segment:
 
-dec %ecx
+sal $5, %ecx /* ecx *- ELF_sizeof_Phdr */
 
-sal $5, %ecx
-
-cmp $PT_LOAD, (%ebx, %ecx)
+cmp $PT_LOAD, (- ELF_sizeof_Phdr)(%ebx, %ecx)
 jne noload
 
 /* Segment PT_LOAD: loading */
 
 push %ecx
 
-mov (ELF_p_offset)(%ebx, %ecx), %esi
+mov (ELF_p_offset - ELF_sizeof_Phdr)(%ebx, %ecx), %esi
 add %edx, %esi
-mov (ELF_p_vaddr)(%ebx, %ecx), %edi
-mov (ELF_p_memsz)(%ebx, %ecx), %eax
-mov (ELF_p_filesz)(%ebx, %ecx), %ecx
+mov (ELF_p_vaddr - ELF_sizeof_Phdr)(%ebx, %ecx), %edi
+mov (ELF_p_memsz - ELF_sizeof_Phdr)(%ebx, %ecx), %eax
+mov (ELF_p_filesz - ELF_sizeof_Phdr)(%ebx, %ecx), %ecx
 // TODO: if %ecx > %eax -> %ecx = %eax
 sub %ecx, %eax
 
@@ -84,7 +84,6 @@ pop %ecx
 noload: // Don't do anything
 
 shr $5, %ecx
-inc %ecx
 loop load_segment
 
 mov (ELF_e_entry)(%edx), %eax
