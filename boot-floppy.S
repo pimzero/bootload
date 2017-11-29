@@ -4,12 +4,12 @@
 
 floppy_driver:
 dev_driver:
-sub $0x1008, %esp
+sub $0x4008, %esp
 
 lea 8(%esp), %ebx
 push %ebx
 
-mov $0x201, %eax
+mov $0x220, %eax
 mov $2, %ecx
 xor %edx, %edx
 mov $0x13, %ebp
