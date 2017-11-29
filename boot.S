@@ -1,15 +1,9 @@
-.text
+.section .boot, "ax"
 .code16
-.global __entry
-.global bx_to_segm
-.global go_pm
+.global __entry16
+__entry16:
 
 cli
-
-#jmp 1f
-#1:
-
-# PM mode
 
 call go_pm
 
