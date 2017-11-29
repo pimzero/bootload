@@ -19,9 +19,8 @@ $(TARGET): $(OBJS)
 	dd if=/dev/zero of=$@ bs=1024 count=1440
 	dd if=$< of=$@ bs=1 count=512 conv=notrunc
 
-%.iso: %.img $(SOURCE_ISO)
-	#xorriso -as mkisofs -U -no-emul-boot -b $< -o $@ $^
-	xorriso -as mkisofs -U -b $< -o $@ $^
+%.iso: %.bin $(SOURCE_ISO)
+	xorriso -as mkisofs -U -no-emul-boot -b $< -o $@ $^
 
 run-iso: $(TARGET).iso
 	qemu-system-i386 -cdrom $^ $(QEMU_FLAGS)
