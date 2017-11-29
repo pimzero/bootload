@@ -13,6 +13,7 @@ mov $0x10, %bl
 
 call bl_to_segm
 
-push %edx
+mov $0x00007BF0, %esp
 
+/* edx contains drive nr */
 call __entry
