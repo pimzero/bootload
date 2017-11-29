@@ -1,6 +1,6 @@
 TARGET = boot-floppy
-KERNEL = /k
-SOURCE_FS ?= ./source
+KERNEL = k/k/k
+SOURCE_FS ?= ./k/iso
 
 CPPFLAGS = -DKERNEL_PATH=$(KERNEL)
 COMMON = -static -m32 -ggdb
@@ -14,12 +14,19 @@ all: $(TARGET)-emu.iso
 
 $(TARGET): $(TARGET).o $(OBJS)
 
+$(SOURCE_FS):
+	$(MAKE) -C k
+
+$(KERNEL):
+	$(MAKE) -C k
+
 %.bin: %
 	objcopy -O binary $^ $@
 
-%.img: %.bin
+%.img: %.bin $(KERNEL)
 	dd if=/dev/zero of=$@ bs=1024 count=1440
 	dd if=$< of=$@ bs=1 count=512 conv=notrunc
+	dd if=$(KERNEL) of=$@ bs=1 seek=512  conv=notrunc
 
 %-emu.iso: %.img $(SOURCE_FS)
 	xorriso -as mkisofs -U -b $< -o $@ $^
@@ -46,5 +53,6 @@ dbg-%: run-%
 
 clean:
 	$(RM) -f $(OBJS) $(TARGET).o $(TARGET) $(TARGET).bin $(TARGET).img $(TARGET).iso $(TARGET)-emu.iso
+	$(MAKE) -C k clean
 
 .PHONY: all clean

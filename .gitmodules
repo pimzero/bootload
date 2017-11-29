@@ -1,0 +1,3 @@
+[submodule "k"]
+	path = k
+	url = git://git.lse.epita.fr/k.git
