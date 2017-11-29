@@ -1,16 +1,18 @@
 TARGET = boot
-COMMON= -static -m32 -ggdb
+KERNEL = /k
+SOURCE_FS ?= ./source
+
+CPPFLAGS = -DKERNEL_PATH=$(KERNEL)
+COMMON = -static -m32 -ggdb
 ASFLAGS = $(COMMON) -ffreestanding -fno-asynchronous-unwind-tables
 CFLAGS = $(ASFLAGS) -Os -fno-stack-protector
 LDFLAGS = $(COMMON) -nostdlib -Tlinker.ld -n -Wl,--build-id=none -nostartfiles
 
 OBJS = boot.o data.o entry.o bios.o elf_loader.o
 
-SOURCE_ISO ?= ./source
+all: $(TARGET).iso
 
-all: $(TARGET).img
-
-$(TARGET): $(OBJS)
+$(TARGET): $(TARGET).o $(OBJS)
 
 %.bin: %
 	objcopy -O binary $^ $@
@@ -19,28 +21,30 @@ $(TARGET): $(OBJS)
 	dd if=/dev/zero of=$@ bs=1024 count=1440
 	dd if=$< of=$@ bs=1 count=512 conv=notrunc
 
-%.iso: %.bin $(SOURCE_ISO)
+%-emu.iso: %.img $(SOURCE_FS)
+	xorriso -as mkisofs -U -b $< -o $@ $^
+
+%.iso: %.bin $(SOURCE_FS)
 	xorriso -as mkisofs -U -no-emul-boot -b $< -o $@ $^
 
-run-iso: $(TARGET).iso
-	qemu-system-i386 -cdrom $^ $(QEMU_FLAGS)
-
-run-img: $(TARGET).img
+run-img-%: %.img
 	qemu-system-i386 -fda $^ $(QEMU_FLAGS)
 
-run-iso-kvm: QEMU_FLAGS = -enable-kvm
-run-iso-kvm: run-iso
+run-iso-%: %.iso
+	qemu-system-i386 -cdrom $^ $(QEMU_FLAGS)
 
-run-img-kvm: QEMU_FLAGS = -enable-kvm
-run-img-kvm: run-img
+run-iso-emu-%: %-emu.iso
+	qemu-system-i386 -cdrom $^ $(QEMU_FLAGS)
 
-run-iso-dbg: QEMU_FLAGS = -s -S
-run-iso-dbg: run-iso
+kvm-%: QEMU_FLAGS = -enable-kvm
+kvm-%: run-%
+	#
 
-run-img-dbg: QEMU_FLAGS = -s -S
-run-img-dbg: run-img
+dbg-%: QEMU_FLAGS = -s -S
+dbg-%: run-%
+	#
 
 clean:
-	$(RM) boot.bin boot.img boot.iso boot $(OBJS)
+	$(RM) -f $(OBJS) $(TARGET).o $(TARGET) $(TARGET).bin $(TARGET).img $(TARGET).iso $(TARGET)-emu.iso
 
-.PHONY: all run-iso run-iso-kvm  run-iso-dbg run-img run-img-kvm run-img-dbg clean
+.PHONY: all clean
