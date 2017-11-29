@@ -6,9 +6,9 @@ LDFLAGS = $(COMMON) -nostdlib -Tlinker.ld -n -Wl,--build-id=none -nostartfiles
 
 OBJS = boot.o data.o entry.o bios.o
 
-SOURCE_ISO ?= source.iso
+SOURCE_ISO ?= ./source
 
-all: $(TARGET).iso
+all: $(TARGET).img
 
 $(TARGET): $(OBJS)
 
@@ -19,13 +19,12 @@ $(TARGET): $(OBJS)
 	dd if=/dev/zero of=$@ bs=1024 count=1440
 	dd if=$< of=$@ bs=1 count=512 conv=notrunc
 
-%.iso: %.bin $(SOURCE_ISO)
-	cp $(SOURCE_ISO) $@
-	dd if=$< of=$@ bs=1 count=512 conv=notrunc
+%.iso: %.img $(SOURCE_ISO)
+	#xorriso -as mkisofs -U -no-emul-boot -b $< -o $@ $^
+	xorriso -as mkisofs -U -b $< -o $@ $^
 
 run-iso: $(TARGET).iso
-	qemu-system-i386 -fda $^ $(QEMU_FLAGS)
-	#qemu-system-i386 -cdrom $^ $(QEMU_FLAGS)
+	qemu-system-i386 -cdrom $^ $(QEMU_FLAGS)
 
 run-img: $(TARGET).img
 	qemu-system-i386 -fda $^ $(QEMU_FLAGS)
