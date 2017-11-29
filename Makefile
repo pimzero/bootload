@@ -4,7 +4,7 @@ ASFLAGS = $(COMMON) -ffreestanding -fno-asynchronous-unwind-tables
 CFLAGS = $(ASFLAGS) -Os -fno-stack-protector
 LDFLAGS = $(COMMON) -nostdlib -Tlinker.ld -n -Wl,--build-id=none -nostartfiles
 
-OBJS = boot.o data.o entry.o bios.o
+OBJS = boot.o data.o entry.o bios.o elf_loader.o
 
 SOURCE_ISO ?= ./source
 
