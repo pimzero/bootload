@@ -1,8 +1,9 @@
 TARGET = boot-floppy
 KERNEL = k/k/k
+KERNEL_PATH = k
 SOURCE_FS ?= ./k/iso
 
-CPPFLAGS = -DKERNEL_PATH=$(KERNEL)
+CPPFLAGS = -DKERNEL_PATH=$(KERNEL_PATH)
 COMMON = -static -m32 -ggdb
 ASFLAGS = $(COMMON) -ffreestanding -fno-asynchronous-unwind-tables
 CFLAGS = $(ASFLAGS) -Os -fno-stack-protector
@@ -25,8 +26,9 @@ $(KERNEL):
 
 %.img: %.bin $(KERNEL)
 	dd if=/dev/zero of=$@ bs=1024 count=1440
-	dd if=$< of=$@ bs=1 count=512 conv=notrunc
-	dd if=$(KERNEL) of=$@ bs=1 seek=512  conv=notrunc
+	mkfs.fat -f1 -R1 -F16 $@
+	mcopy -i $@ $(KERNEL) "::$(KERNEL_PATH)"
+	dd if=$< of=$@ bs=1 count=448 seek=62 conv=notrunc
 
 %-emu.iso: %.img $(SOURCE_FS)
 	xorriso -as mkisofs -U -b $< -o $@ $^

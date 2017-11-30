@@ -1,7 +1,7 @@
 SECTIONS
 {
-    . = 0x7C00;
-    .text : AT(0x7C00)
+    . = 0x7C00 + 0x3e;
+    .text : AT(0x7C00 + 0x3e)
     {
         *(.boot)
         *(.text);
