@@ -2,6 +2,7 @@
 #define FAT_sectors_per_cluster 0xd
 #define FAT_reserved_sectors 0xe
 #define FAT_fat_copies 0x10
+#define FAT_root_entries 0x11
 #define FAT_sectors_per_fat 0x16
 #define FAT_sectors_per_track 0x18
 
@@ -32,11 +33,67 @@ cbw
 imul FAT_sectors_per_fat(%ecx), %ax
 add FAT_reserved_sectors(%ecx), %ax
 
+push %eax
+
+call load_sector
 /* TODO: Verify this */
 //mov $13, %eax
+
+pop %ecx // root_begin
+
+pop %ebp
+/* Root loaded starting at ebp */
+
+/* TODO: iterate over root (and maybe subdirs) to find kernel */
+
+mov FAT_file_sze(%ebp), %eax
+//xor %edx, %edx
+//xor %ebx, %ebx
+//mov (0x7c00 + FAT_sectors_per_cluster), %bl
+//divb %bx, %ax
+
+
+mov FAT_file_cluster(%ebp), %ax
+mulb (0x7c00 + FAT_sectors_per_cluster)
+mov %ax, %si
+/* cx = root_begin, si = C * S/C */
+mov (0x7c00 + FAT_root_entries), %ax
+mov (0x7c00 + FAT_bytes_per_sector), %bx
+shr $5, %bx
+xor %edx, %edx
+div %bx, %ax
+/* ax = root_size = root_entries * 0x20 / bytes/sectors */
+
+add %si, %ax
+add %cx, %ax
+dec %eax
+dec %eax
+
+dec %eax
+
+mov %ebp, %ebx
+push %ebx
+xor %ecx, %ecx
+mov $0x7c, %ch
+
+call load_sector
+
+mov $0x0e44, %ax
+mov $0x10, %ebp
+call bios_int
+
+pop %edx
+
+call loader_elf
+
+add $0x208, %esp
+jmp *%eax
+
+load_sector:
+/* ebx = buf, %eax = sector number, %ecx = 0x7c00 */
 mov FAT_sectors_per_track(%ecx), %cx
 xor %edx, %edx
-dec %cx
+//dec %cx
 div %cx, %ax
 mov %al, %ch
 mov %dl, %cl
@@ -48,26 +105,4 @@ xor %edx, %edx
 mov $0x13, %ebp
 call bios_int
 
-pop %edx
-/* Root loaded starting at edx */
-
-/* TODO: iterate over root (and maybe subdirs) to find kernel */
-
-mov FAT_file_sze(%edx), %ecx
-mov FAT_file_cluster(%edx), %ax
-
-ok:
-jmp ok
-
-
-mov $0x0e44, %ax
-mov $0x10, %ebp
-call bios_int
-
-
-//pop %edx
-
-call loader_elf
-
-add $0x208, %esp
-jmp *%eax
+ret
