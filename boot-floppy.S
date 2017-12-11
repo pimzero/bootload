@@ -1,3 +1,4 @@
+.section .driver, "ax"
 #define FAT_bytes_per_sector 0xb
 #define FAT_sectors_per_cluster 0xd
 #define FAT_reserved_sectors 0xe

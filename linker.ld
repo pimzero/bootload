@@ -4,6 +4,7 @@ SECTIONS
     .text : AT(0x7C00 + 0x3e)
     {
         *(.boot)
+        *(.driver)
         *(.text);
     }
     .data :
