@@ -34,6 +34,7 @@ imul FAT_sectors_per_fat(%ecx), %ax
 add FAT_reserved_sectors(%ecx), %ax
 
 push %eax
+dec %eax
 
 call load_sector
 /* TODO: Verify this */
@@ -98,10 +99,16 @@ div %cx, %ax
 mov %al, %ch
 mov %dl, %cl
 inc %cx
+inc %cx
+
+// Hardcoded handling of 2 heads
+xor %edx, %edx
+mov %ch, %dh
+and $1, %dh
+shr %ch
 
 mov $0x201, %eax
 //mov $2, %ecx
-xor %edx, %edx
 mov $0x13, %ebp
 call bios_int
 
