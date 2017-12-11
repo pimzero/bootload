@@ -99,8 +99,8 @@ xor %edx, %edx
 div %cx, %ax
 mov %al, %ch
 mov %dl, %cl
-inc %cx
-inc %cx
+inc %ecx
+inc %ecx
 
 // Hardcoded handling of 2 heads
 xor %edx, %edx
