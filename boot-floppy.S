@@ -35,7 +35,7 @@ imul FAT_sectors_per_fat(%ecx), %ax
 add FAT_reserved_sectors(%ecx), %ax
 
 push %eax
-dec %eax
+//dec %eax
 
 call load_sector
 /* TODO: Verify this */
@@ -48,37 +48,64 @@ pop %ebp
 
 /* TODO: iterate over root (and maybe subdirs) to find kernel */
 
-mov FAT_file_sze(%ebp), %eax
+mov FAT_file_sze(%ebp), %edi
+neg %edi
+lea (%ebp, %edi), %esp
+neg %edi
+
+ljmp $0x18, $1f
+1:
+.code16
+
 //xor %edx, %edx
 //xor %ebx, %ebx
 //mov (0x7c00 + FAT_sectors_per_cluster), %bl
 //divb %bx, %ax
 
 
-mov FAT_file_cluster(%ebp), %ax
+mov FAT_file_cluster(%bp), %ax
 mulb (0x7c00 + FAT_sectors_per_cluster)
 mov %ax, %si
 /* cx = root_begin, si = C * S/C */
 mov (0x7c00 + FAT_root_entries), %ax
 mov (0x7c00 + FAT_bytes_per_sector), %bx
 shr $5, %bx
-xor %edx, %edx
+xor %dx, %dx
 div %bx, %ax
 /* ax = root_size = root_entries * 0x20 / bytes/sectors */
 
+mov %sp, %bp
+
 add %si, %ax
 add %cx, %ax
-dec %eax
-dec %eax
+dec %ax
+dec %ax
 
-dec %eax
+//dec %ax
 
-mov %ebp, %ebx
+mov %bp, %bx
+
+ljmp $0x8, $1f
+1:
+.code32
 push %ebx
-xor %ecx, %ecx
-mov $0x7c, %ch
 
+mov %edi, %ecx
+shr $9, %ecx
+inc %ecx
+
+load_file:
+push %ecx
+push %ebx
+push %eax
 call load_sector
+// add 512, ebx
+pop %eax
+inc %eax
+pop %ebx
+add $512, %ebx
+pop %ecx
+loop load_file
 
 mov $0x0e44, %ax
 mov $0x10, %ebp
@@ -88,22 +115,25 @@ pop %edx
 
 call loader_elf
 
-add $0x208, %esp
+mov $0x00007BF0, %esp
 jmp *%eax
 
 load_sector:
-/* ebx = buf, %eax = sector number, %ecx = 0x7c00 */
+/* ebx = buf, %eax = sector number */
+xor %ecx, %ecx
+mov $0x7c, %ch
+
 mov FAT_sectors_per_track(%ecx), %cx
 xor %edx, %edx
 //dec %cx
 div %cx, %ax
-mov %al, %ch
-mov %dl, %cl
-inc %ecx
-inc %ecx
+inc %edx
+
+mov %edx, %ecx // Sector in cl
 
 // Hardcoded handling of 2 heads
 xor %edx, %edx
+mov %al, %ch
 mov %ch, %dh
 and $1, %dh
 shr %ch
